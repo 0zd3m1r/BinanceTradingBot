@@ -26,7 +26,6 @@ if __name__ == '__main__':
     limit = 500
     bot = telegram.Bot(token="<TOKEN>")
     chatid = "<CHATID>"
-    chatidonder = "<CHATID>"
     fireemoji = emoji.emojize(':fire:')
     shitemoji = '\U0001F4A9'
     thumbsup = '\U0001F44D'
@@ -62,11 +61,25 @@ if __name__ == '__main__':
                            previous_ema1 = emax.ewm(span=1).mean().iloc[-2,-1]
                            previous_ema26 = emax.ewm(span=26).mean().iloc[-2,-1]
                            if last_ema26 > last_ema1 and previous_ema1 > previous_ema26:
-                            ratiodown=1-(close[-1]/last_ema26)
-                            bot.sendMessage(chat_id=chatid, text=(shitemoji*5) + "SELL" +(shitemoji*5) + "\n" + symbol + "\n" + "Sell value point: "+str("{:.16f}".format(sellavg))+ "\nProfit lose on closing: "+str("{0:.4%}".format(ratiodown))+ thumbsdown)
+                            ratiodown=(high[-1] - low[-1])/high[-1]
+                            ratioEMAdown=(last_ema26-close[-1])/close[-1]
+                            if ratioEMAdown >0 and ratioEMAdown<0.01: emojiema='\U0001F6A9'
+                            elif ratioEMAdown>=0.01 and ratioEMAdown<0.03: emojiema=('\U0001F6A9')*2
+                            elif ratioEMAdown>=0.03 and ratioEMAdown<0.05: emojiema=('\U0001F6A9')*3
+                            elif ratioEMAdown>=0.05 and ratioEMAdown<0.07: emojiema=('\U0001F6A9')*4
+                            elif ratioEMAdown>=0.07: emojiema=('\U0001F6A9')*5
+
+                            bot.sendMessage(chat_id=chatid, text=(shitemoji*1) + "SAT" + "\n" + symbol + "\n" + "Satış girilecek değer: "+str("{:.16f}".format(sellavg))+ "\nKapanıştaki düşüş oranı: "+str("{0:.4%}".format(ratiodown))+ thumbsdown+"\nEMA'ya Uzaklık: "+str("{0:.4%}".format(ratioEMAdown))+emojiema)                            
                            elif last_ema26 < last_ema1 and previous_ema1 < previous_ema26:
-                            ratioup=(close[-1]/last_ema26)-1
-                            bot.sendMessage(chat_id=chatid, text=(fireemoji*5)+ "BUY" +(fireemoji*5) + "\n" + symbol + "\n" + "Buy value point: "+str("{:.16f}".format(sellavg))+ "\nProfit gain on closing: "+str("{0:.4%}".format(ratioup))+ thumbsup)
+                            ratioEMAup=(close[-1]-last_ema26)/last_ema26
+                            ratioup=(high[-1]-low[-1])/low[-1]
+                            if ratioEMAup >0 and ratioEMAup<0.01: emojiema='\U0001F4B0'
+                            elif ratioEMAup>=0.01 and ratioEMAup<0.03: emojiema=('\U0001F4B0')*2
+                            elif ratioEMAup>=0.03 and ratioEMAup<0.05: emojiema=('\U0001F4B0')*3
+                            elif ratioEMAup>=0.05 and ratioEMAup<0.07: emojiema=('\U0001F4B0')*4
+                            elif ratioEMAup>=0.07: emojiema=('\U0001F4B0')*5
+
+                            bot.sendMessage(chat_id=chatid, text=(fireemoji*1)+ "AL"+ "\n" + symbol + "\n" + "Alım girilecek değer: "+str("{:.16f}".format(buyavg))+ "\nKapanıştaki yükseliş oranı: "+str("{0:.4%}".format(ratioup))+ thumbsup+"\nEMA'ya Uzaklık: "+str("{0:.4%}".format(ratioEMAup))+emojiema)                            
                            count += 1
                         except: count+=1
                 except Exception as exp:
