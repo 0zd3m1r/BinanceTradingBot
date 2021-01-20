@@ -21,7 +21,6 @@ if __name__ == '__main__':
     credentials = '<PATH>/Credentials'
     markets = '<PATH>/MarketsTop200'
     connection = BinanceConnection(credentials)
-
     interval = '1h'
     limit = 500
     bot = telegram.Bot(token="<TOKEN>")
@@ -51,9 +50,6 @@ if __name__ == '__main__':
                            volume = [float(entry[7]) for entry in klines]
                            buyavg = ((close[-1] + high[-1]) / 2 - (high[-1] * (1 - open[-1] / close[-1]) * (1 - ((low[-1] * open[-1]) / (high[-1] * close[-1])))))
                            sellavg = (low[-1] + close[-1]) / 1.99 + (low[-1] * (1 - low[-1] / open[-1]) * (1 - ((low[-1] * open[-1]) / (close[-1] * high[-1]))) / 1.1)
-                           #if volume[-1]>volume[-2] and volume[-2]>volume[-3] and volume[-3]>volume[-4] and volume[-4]>volume[-5] and volume[-5]>volume[-6] and volume[-6]>volume[-7]  and volume[-7>volume[-8] and volume[-8]>volume[-9] and volume[-9]>volume[-10]:
-                           # volumeinfo="Hacim artışta!"
-                           #if volume[-1]>volume[-2] and volume[-2]>volume[-3] and volume[-3]>volume[-4] and volume[-4]>volume[-5] and volume[-5]>volume[-6] and volume[-6]>volume[-7] and volume[-7]>volume[-8] and volume[-8]>volume[-9] and volume[-9]>volume[-10]:
                            volumeratio = volume[-1]/volume[-2]
                            if volumeratio>3 and close[-1]>close[-2]:
                             volumeinfo='alım tarafında hacim çok güçlü artıyor!'
@@ -62,9 +58,7 @@ if __name__ == '__main__':
                            elif volumeratio>3 and close[-1]<close[-2]:
                             volumeinfo='satış tarafında hacim çok güçlü artıyor!'
                             print(symbol,volumeinfo,volumeratio)
-                            
                             bot.sendMessage(chat_id=chatid, text=((volumeemoji)*1+" " + symbol+ "\nSatış tarafında hacim çok güçlü artıyor! "+volumedownemoji+"\n" + str("{:.1f}".format(volumeratio))+ " kat arttı!"))
-                           
                            else:print(symbol)
                            count += 1
                         except: count+=1
@@ -72,7 +66,6 @@ if __name__ == '__main__':
                     print(exp.status_code, flush=True)
                     print(exp.message, flush=True)
             break
-
         except Exception as exp:
             print(exp.status_code, flush=True)
             print(exp.message, flush=True)
