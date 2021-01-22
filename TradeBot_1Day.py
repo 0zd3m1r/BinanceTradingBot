@@ -21,7 +21,6 @@ if __name__ == '__main__':
     credentials = '<PATH>/Credentials'
     markets = '<PATH>/Markets'
     connection = BinanceConnection(credentials)
-
     interval = '1d'
     limit = 500
     bot = telegram.Bot(token="<TOKEN>")
@@ -32,16 +31,13 @@ if __name__ == '__main__':
     thumbsdown = '\U0001F44E'
     while True:
         #time.sleep(20)
-
         try:
-
             with open(markets) as fp:
                 lines = fp.read().splitlines()
                 count = 0
                 try:
                    for line in lines:
                         symbol = lines[count]
-
                         try:
                            klines = connection.client.get_klines(symbol=symbol, interval=interval, limit=limit)
                            print(symbol)
@@ -51,15 +47,18 @@ if __name__ == '__main__':
                            close = [float(entry[4]) for entry in klines]
                            buyavg = ((close[-1] + high[-1]) / 2 - (high[-1] * (1 - open[-1] / close[-1]) * (1 - ((low[-1] * open[-1]) / (high[-1] * close[-1])))))
                            sellavg = (low[-1] + close[-1]) / 1.99 + (low[-1] * (1 - low[-1] / open[-1]) * (1 - ((low[-1] * open[-1]) / (close[-1] * high[-1]))) / 1.1)
-
                            last_closing_price = close[-1]
                            close_array = np.asarray(close)
                            close_finished = close_array[:-1]
                            emax = pandas.DataFrame(close_array)
                            last_ema1 = emax.ewm(span=1).mean().iloc[-1,-1]
-                           last_ema26 = emax.ewm(span=26).mean().iloc[-1,-1]
+                           last_ema26 = emax.ewm(span=52).mean().iloc[-1,-1]
                            previous_ema1 = emax.ewm(span=1).mean().iloc[-2,-1]
-                           previous_ema26 = emax.ewm(span=26).mean().iloc[-2,-1]
+                           previous_ema26 = emax.ewm(span=52).mean().iloc[-2,-1]
+                           def telegramsat(id):
+                            bot.sendMessage(chat_id=id, text=(shitemoji*1) + "SAT (Günlük Grafik)" + "\n" + symbol + "\n" + "Satış girilecek değer: "+str("{:.16f}".format(sellavg))+"\nKapanıştaki düşüş oranı: "+str("{0:.4%}".format(ratiodown))+ thumbsdown+"\nEMA'ya Uzaklık: "+str("{0:.4%}".format(ratioEMAdown))+emojiema)
+                           def telegramal(id):
+                            bot.sendMessage(chat_id=id, text=(fireemoji*1)+ "AL (Günlük Grafik)"+ "\n" + symbol + "\n" + "Alım girilecek değer: "+str("{:.16f}".format(buyavg))+ "\nKapanıştaki yükseliş oranı: "+str("{0:.4%}".format(ratioup))+ thumbsup+"\nEMA'ya Uzaklık: "+str("{0:.4%}".format(ratioEMAup))+emojiema)
                            if last_ema26 > last_ema1 and previous_ema1 > previous_ema26:
                             ratiodown=(high[-1] - low[-1])/high[-1]
                             ratioEMAdown=(last_ema26-close[-1])/close[-1]
@@ -68,8 +67,7 @@ if __name__ == '__main__':
                             elif ratioEMAdown>=0.03 and ratioEMAdown<0.05: emojiema=('\U0001F6A9')*3
                             elif ratioEMAdown>=0.05 and ratioEMAdown<0.07: emojiema=('\U0001F6A9')*4
                             elif ratioEMAdown>=0.07: emojiema=('\U0001F6A9')*5
-
-                            bot.sendMessage(chat_id=chatid, text=(shitemoji*1) + "SAT" + "\n" + symbol + "\n" + "Satış girilecek değer: "+str("{:.16f}".format(sellavg))+ "\nKapanıştaki düşüş oranı: "+str("{0:.4%}".format(ratiodown))+ thumbsdown+"\nEMA'ya Uzaklık: "+str("{0:.4%}".format(ratioEMAdown))+emojiema)                            
+                            telegramsat(chatid)
                            elif last_ema26 < last_ema1 and previous_ema1 < previous_ema26:
                             ratioEMAup=(close[-1]-last_ema26)/last_ema26
                             ratioup=(high[-1]-low[-1])/low[-1]
@@ -78,15 +76,13 @@ if __name__ == '__main__':
                             elif ratioEMAup>=0.03 and ratioEMAup<0.05: emojiema=('\U0001F4B0')*3
                             elif ratioEMAup>=0.05 and ratioEMAup<0.07: emojiema=('\U0001F4B0')*4
                             elif ratioEMAup>=0.07: emojiema=('\U0001F4B0')*5
-
-                            bot.sendMessage(chat_id=chatid, text=(fireemoji*1)+ "AL"+ "\n" + symbol + "\n" + "Alım girilecek değer: "+str("{:.16f}".format(buyavg))+ "\nKapanıştaki yükseliş oranı: "+str("{0:.4%}".format(ratioup))+ thumbsup+"\nEMA'ya Uzaklık: "+str("{0:.4%}".format(ratioEMAup))+emojiema)                            
+                            telegramal(chatid)
                            count += 1
                         except: count+=1
                 except Exception as exp:
                     print(exp.status_code, flush=True)
                     print(exp.message, flush=True)
             break
-
         except Exception as exp:
             print(exp.status_code, flush=True)
             print(exp.message, flush=True)
