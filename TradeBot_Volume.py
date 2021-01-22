@@ -19,7 +19,7 @@ class BinanceConnection:
 
 if __name__ == '__main__':
     credentials = '<PATH>/Credentials'
-    markets = '<PATH>/MarketsTop200'
+    markets = '<PATH>/Markets'
     connection = BinanceConnection(credentials)
     interval = '1h'
     limit = 500
@@ -32,6 +32,7 @@ if __name__ == '__main__':
     thumbsdown = '\U0001F44E'
     volumeupemoji = '\U0001F535'
     volumedownemoji = '\U0001F534'
+    woo = '\U0001F631'
     while True:
         #time.sleep(20)
         try:
@@ -51,14 +52,22 @@ if __name__ == '__main__':
                            buyavg = ((close[-1] + high[-1]) / 2 - (high[-1] * (1 - open[-1] / close[-1]) * (1 - ((low[-1] * open[-1]) / (high[-1] * close[-1])))))
                            sellavg = (low[-1] + close[-1]) / 1.99 + (low[-1] * (1 - low[-1] / open[-1]) * (1 - ((low[-1] * open[-1]) / (close[-1] * high[-1]))) / 1.1)
                            volumeratio = volume[-1]/volume[-2]
-                           if volumeratio>3 and close[-1]>close[-2]:
+                           if volumeratio>10:
+                            volumeupemoji = woo
+                            volumedownemoji = woo
+                           else:
+                            volumeupemoji = '\U0001F535'
+                            volumedownemoji = '\U0001F534'
+                           def telegramal(id):
+                            bot.sendMessage(chat_id=id, text=((volumeemoji)*1+" " + symbol+ "\nAlım tarafında hacim çok güçlü artıyor! "+volumeupemoji+"\n" + str("{:.1f}".format(volumeratio))+ " kat arttı!"))
+                           def telegramsat(id):
+                            bot.sendMessage(chat_id=id, text=((volumeemoji)*1+" " + symbol+ "\nSatış tarafında hacim çok güçlü artıyor! "+volumedownemoji+"\n" + str("{:.1f}".format(volumeratio))+ " kat arttı!"))
+                           if volumeratio>10  and close[-1]>close[-2]:
                             volumeinfo='alım tarafında hacim çok güçlü artıyor!'
-                            print(symbol,volumeinfo,volumeratio)
-                            bot.sendMessage(chat_id=chatid, text=((volumeemoji)*1+" " + symbol+ "\nAlım tarafında hacim çok güçlü artıyor! "+volumeupemoji+"\n" + str("{:.1f}".format(volumeratio))+ " kat arttı!"))
-                           elif volumeratio>3 and close[-1]<close[-2]:
+                            telegramal(chatid)
+                           elif volumeratio>10 and close[-1]<close[-2]:
                             volumeinfo='satış tarafında hacim çok güçlü artıyor!'
-                            print(symbol,volumeinfo,volumeratio)
-                            bot.sendMessage(chat_id=chatid, text=((volumeemoji)*1+" " + symbol+ "\nSatış tarafında hacim çok güçlü artıyor! "+volumedownemoji+"\n" + str("{:.1f}".format(volumeratio))+ " kat arttı!"))
+                            telegramsat(chatid)
                            else:print(symbol)
                            count += 1
                         except: count+=1
@@ -66,6 +75,7 @@ if __name__ == '__main__':
                     print(exp.status_code, flush=True)
                     print(exp.message, flush=True)
             break
+
         except Exception as exp:
             print(exp.status_code, flush=True)
             print(exp.message, flush=True)
