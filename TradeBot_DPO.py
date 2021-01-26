@@ -68,14 +68,14 @@ if __name__ == '__main__':
                            period_=21
                            ma=sma(close,period_)
                            ma14 = sma(close,14)
-                         # barsback=int(period_/2)+1
+#                           barsback=int(period_/2)+1
                            dpo14=close-ma14
                            dpo=close-ma
                            dpo_orj=close-ma[-12]
                            def telegramsat(id):
-                            bot.sendMessage(chat_id=id, text=(shitemoji*3) + "SAT "+ interval+ " Grafik(DPO)" + "\n" + symbol + "\n" + "Satış girilecek değer: "+str("{:.16f}".format(sellavg)) + thumbsdown + "\nHacim "+str("{:.1f}".format(volumeratio))+ " kat arttı!\nDPO-21: "+str(dpo[-1])+"\nDPO-orj: "+str(dpo_orj[-1]))
+                            bot.sendMessage(chat_id=id, text=(shitemoji*3) + "SELL "+ interval+ " Graph(DPO)" + "\n" + symbol + "\n" + "Sell point: "+str("{:.16f}".format(sellavg)) + thumbsdown + "\nVolume "+str("{:.1f}".format(volumeratio))+ "x increased!\nDPO-21: "+str(dpo[-1])+"\nDPO-orj: "+str(dpo_orj[-1]))
                            def telegramal(id):
-                            bot.sendMessage(chat_id=id, text=(fireemoji*3)+ "AL " + interval+" Grafik(DPO)" + "\n" + symbol + "\n" + "Alım girilecek değer: "+str("{:.16f}".format(buyavg))+ thumbsup +"\nHacim "+str("{:.1f}".format(volumeratio))+ " kat arttı!\nDPO-21: "+str(dpo[-1])+"\nDPO-orj: "+str(dpo_orj[-1])+"\nStop Loss: "+str("{:.16f}".format(buyavg*0.93)))
+                            bot.sendMessage(chat_id=id, text=(fireemoji*3)+ "BUY " + interval+" Graph(DPO)" + "\n" + symbol + "\n" + "Buy point: "+str("{:.16f}".format(buyavg))+ thumbsup +"\nVolume "+str("{:.1f}".format(volumeratio))+ "x increased!\nDPO-21: "+str(dpo[-1])+"\nDPO-orj: "+str(dpo_orj[-1])+"\nStop Loss: "+str("{:.16f}".format(buyavg*0.93)))
                            print(symbol,dpo[-1],dpo_orj[-1])
                            if dpo[-1]>0 and dpo[-2]<0:
                             telegramal(chatid)
