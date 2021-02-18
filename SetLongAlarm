@@ -1,0 +1,110 @@
+#!/usr/bin/env python
+import pandas
+from binance.client import Client
+import numpy as np
+import time
+import telegram
+import emoji
+
+class BinanceConnection:
+    def __init__(self, file):
+        self.connect(file)
+
+    """ Creates Binance client """
+    def connect(self, file):
+        lines = [line.rstrip('\n') for line in open(file)]
+        key = lines[0]
+        secret = lines[1]
+        self.client = Client(key, secret)
+
+if __name__ == '__main__':
+    credentials = '<PATH>'
+    markets = '<PATH>'
+    orderfile = '<PATH>/AlarmPosition'
+    connection = BinanceConnection(credentials)
+    interval = '1h'
+    limit = 500
+    bot = telegram.Bot(token="<TOKEN>")
+    chatid = "992512776"
+    fireemoji = emoji.emojize(':fire:')
+    shitemoji = '\U0001F4A7'
+    thumbsup = '\U0001F44D'
+    thumbsdown = '\U0001F44E'
+    while True:
+        try:
+            with open(markets) as fp:
+                lines = fp.read().splitlines()
+                flong =  open(orderfile, "w")
+                count = 0
+                try:
+                   for line in lines:
+                        symbol = lines[count]
+                        try:
+                           klines = connection.client.get_klines(symbol=symbol, interval=interval, limit=limit)
+                           open = [float(entry[1]) for entry in klines]
+                           high = [float(entry[2]) for entry in klines]
+                           low = [float(entry[3]) for entry in klines]
+                           close = [float(entry[4]) for entry in klines]
+                           volume = [float(entry[7]) for entry in klines]
+                           buyavg = ((close[-1] + high[-1]) / 2 - (high[-1] * (1 - open[-1] / close[-1]) * (1 - ((low[-1] * open[-1]) / (high[-1] * close[-1])))))
+                           sellavg = (low[-1] + close[-1]) / 1.99 + (low[-1] * (1 - low[-1] / open[-1]) * (1 - ((low[-1] * open[-1]) / (close[-1] * high[-1]))) / 1.1)
+                           #FIBOLEVEL
+                           level0 = 0
+                           intervalfibo = '4h'
+                           klinesfibo = connection.client.get_klines(symbol=symbol, interval=intervalfibo, limit=limit)
+                           closefibo = [float(entry[4]) for entry in klinesfibo]
+                           fibo_array = np.asarray(closefibo)
+                           df = fibo_array[-256:]
+                           maxr = df.max()
+                           minr = df.min()
+                           diff = maxr - minr
+                           level0 = maxr - (0*diff)     #level 0 tepe noktası
+                           level1 = maxr - (0.236*diff) #%236short
+                           level2 = maxr - (0.382*diff) #%382 önemli direnç/destek (SHORT)
+                           level3 = maxr - (0.5*diff)   #%50
+                           level4 = maxr - (0.618*diff) #%618 önemli direnç destek (LONG)
+                           level5 = maxr - (0.786*diff) #%786 alt destek
+                           level6 = maxr - (1*diff)     #%1 dip destek,
+                           levela = maxr + (0.382*diff) #tepe1
+                           levelb = maxr + (0.618*diff) #tepe2
+                           level = 0
+                           x = close[-1]
+                           if x < level0 and x > level1:
+                            level = 1
+                            candlel = "\U0001F531"
+                           elif x < level1 and x > level2:
+                            level = 2
+                            candlel = "\U0001F531"*2
+                           elif x < level2 and x > level3:
+                            level = 3
+                            candlel = "\U0001F531"*3
+                           elif x < level3 and x > level4:
+                            level = 4
+                            candlel = "\U0001F531"*4
+                           elif x < level4 and x > level5:
+                            level = 5
+                            candlel = "\U0001F531"*5
+                           elif x < level5 and x > level6:
+                            level = 6
+                            candlel = "\U0001F531"*6
+                           elif x < level6:
+                            level = 7
+                            candlel = "\U0001F531"*7
+                           if level == 0:
+                            candlel = " "
+                           fibolevel = "\n \U0001F4CA FİBONACCI SEVİYELERİ -Şu anki seviyesi: "+str(level)+" "+candlel+"\nTepe-2: "+str("{:.8f}".format(levelb)) +"\nTepe-1: "+str("{:.8f}".format(levela))+ "\nSeviye 0: "+str("{:.8f}".format(level0))+": Tepe noktası %0 \U0001F4B2 \n"+"Seviye 1: "+str("{:.8f}".format(level1))+": Direnç/Destek noktası %236\n"+"\U0001F4C8 SHORT: "+str("{:.8f}".format(level2))+": Önemli Direnç/Destek noktası %382 \U0001F4AA \n"+"\U0001F4C9 LONG: "+str("{:.8f}".format(level4))+": Önemli Direnç/Destek noktası(LONG) %618 \U0001F4AA \n"+"Seviye 5: "+str("{:.8f}".format(level5))+": Alt Destek noktası %786\n"+"Seviye 6: "+str("{:.8f}".format(level6))+": Dip Destek noktası %1\n"
+                           print(symbol, str("{:.8f}".format(close[-1])),str("{:.8f}".format(level1)),str("{:.8f}".format(level2)),str("{:.8f}".format(level3)),str("{:.8f}".format(level4)),str("{:.8f}".format(level5)),str("{:.8f}".format(level6)))
+                           try:
+                            flong.write(symbol+"\n"+str("{:.8f}".format(level4))+"\n")
+                           except Exception:print(Exception)
+                           count += 1
+                        except:
+                         count+=1
+                except Exception as exp:
+                    print(exp.status_code, flush=True)
+                    print(exp.message, flush=True)
+            break
+
+        except Exception as exp:
+            print(exp.status_code, flush=True)
+            print(exp.message, flush=True)
