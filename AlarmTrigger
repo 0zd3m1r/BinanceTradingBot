@@ -5,7 +5,6 @@ import numpy as np
 import time
 import telegram
 import emoji
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 class BinanceConnection:
     def __init__(self, file):
         self.connect(file)
@@ -25,10 +24,6 @@ if __name__ == '__main__':
     limit = 500
     bot = telegram.Bot(token="<TOKEN>")
     chatid = "<CHATID>"
-    fireemoji = emoji.emojize(':fire:')
-    shitemoji = '\U0001F4A7'
-    thumbsup = '\U0001F44D'
-    thumbsdown = '\U0001F44E'
     while True:
         try:
             with open(markets) as fp:
