@@ -1,0 +1,209 @@
+#!/usr/bin/env python
+import pandas
+from binance.client import Client
+import numpy as np
+import time
+import telegram
+import emoji
+
+class BinanceConnection:
+    def __init__(self, file):
+        self.connect(file)
+
+    """ Creates Binance client """
+    def connect(self, file):
+        lines = [line.rstrip('\n') for line in open(file)]
+        key = lines[0]
+        secret = lines[1]
+        self.client = Client(key, secret)
+
+if __name__ == '__main__':
+    credentials = '<PATH>'
+    markets = '<PATH>' #PAIR ETHBTC etc.
+    lowvalue = '<PATH>'
+    connection = BinanceConnection(credentials)
+    interval = '1d'
+    limit = 500
+    bot = telegram.Bot(token="<TOKEN>")
+    chatid = "<TELEGRAMID>"
+    fireemoji = emoji.emojize(':fire:')
+    shitemoji = '\U0001F4A7'
+    thumbsup = '\U0001F44D'
+    thumbsdown = '\U0001F44E'
+    while True:
+        try:
+            with open(markets) as fp:
+                lines = fp.read().splitlines()
+                lvalue = open(lowvalue, "r")
+                bot.sendMessage(chat_id=chatid, text="\U0001F4CC Low Value List \U0001F4CC \n"+lvalue.read())
+                count = 0
+                try:
+                   for line in lines:
+                        symbol = lines[count]
+                        try:
+                           klines = connection.client.get_klines(symbol=symbol, interval=interval, limit=limit)
+                           open = [float(entry[1]) for entry in klines]
+                           high = [float(entry[2]) for entry in klines]
+                           low = [float(entry[3]) for entry in klines]
+                           close = [float(entry[4]) for entry in klines]
+                           buyavg = ((close[-1] + high[-1]) / 2 - (high[-1] * (1 - open[-1] / close[-1]) * (1 - ((low[-1] * open[-1]) / (high[-1] * close[-1])))))
+                           if close[-1] < buyavg:
+                            buyavg = close[-1]
+                           sellavg = (low[-1] + close[-1]) / 1.99 + (low[-1] * (1 - low[-1] / open[-1]) * (1 - ((low[-1] * open[-1]) / (close[-1] * high[-1]))) / 1.1)
+                           last_closing_price = close[-1]
+                           ema1=8
+                           ema2=20
+                           ema3=52
+                           close_array = np.asarray(close)
+                           close_finished = close_array[:-1]
+                           emax = pandas.DataFrame(close_array)
+                           last_ema1 = emax.ewm(span=ema1).mean().iloc[-1,-1]
+                           last_ema2 = emax.ewm(span=ema2).mean().iloc[-1,-1]
+                           last_ema3 = emax.ewm(span=ema3).mean().iloc[-1,-1]
+                           previous_ema1 = emax.ewm(span=ema1).mean().iloc[-2,-1]
+                           previous_ema2 = emax.ewm(span=ema2).mean().iloc[-2,-1]
+                           previous_ema3 = emax.ewm(span=ema3).mean().iloc[-2,-1]
+                           doji = abs(open[-1] - close[-1])<=(high[-1]-low[-1])*0.05
+                           BearishHarami = (close[-2] > open[-2]) and (open[-1] > close[-1]) and (open[-1] <= close[-2]) and (open[-2] <= close[-1]) and (open[-1] - close[-1] < close[-2] - open[-2])
+                           BullishHarami = (open[-2] > close[-2]) and (close[-1] > open[-1]) and (close[-1] <= open[-2]) and (close[-2] <= open[-1]) and (close[-1] - open[-1] < open[-2] - close[-2])
+                           BearishEngulfing = (close[-2] > open[-2]) and (open[-1] > close[-1]) and (open[-1] >= close[-2]) and (open[-2] >= close[-1]) and (open[-1] - close[-1] > close[-2] - open[-2] )
+                           BullishEngulfing = (open[-2] > close[-2]) and (close[-1] > open[-1]) and (close[-1] >= open[-2]) and (close[-2] >= open[-1]) and (close[-1] - open[-1] > open[-2] - close[-2] )
+                           EveningStar = (close[-3] > open[-3] and min(open[-2], close[-2]) > close[-3] and open[-1] < min(open[-2], close[-2]) and close[-1] < open[-1] )
+                           MorningStar = (close[-3] < open[-3] and max(open[-2], close[-2]) < close[-3] and open[-1] > max(open[-2], close[-2]) and close[-1] > open[-1])
+                           PiercingLine = (close[-2] < open[-2] and  open[-1] < low[-2] and close[-1] > (close[-2] + ((open[-2] - close[-2])/2)) and close[-1] < open[-2])
+                           Hammer = (((high[-1] - low[-1])>3*(open[-1] -close[-1])) and  ((close[-1] - low[-1])/(.001 + high[-1] - low[-1]) > 0.6) and ((open[-1] - low[-1])/(.001 + high[-1] - low[-1]) > 0.6))
+
+                           InvertedHammer = (((high[-1] - low[-1])>(3*(open[-1] -close[-1]))) and  ((high[-1] - close[-1])/(0.001 + high[-1] - low[-1]) > 0.6) and ((high[-1] - open[-1])/(0.001 + high[-1] - low[-1]) > 0.6))
+
+                           #BullishBelt = (low[-1] == open[-1] and  open[-1] < lower and open[-1] < close[-1] and close[-1] > ((high[-2] - low[-2]) / 2) + low[-2])
+
+                           BullishKicker = (open[-2]>close[-2] and open[-1]>=open[-2] and close[-1]>open[-1])
+
+                           BearishKicker = (open[-2]<close[-2] and open[-1]<=open[-2] and close[-1]<=open[-1])
+
+                           HangingMan = (((high[-1]-low[-1]>(4*(open[-1]-close[-1])))and((close[-1]-low[-1])/(0.001+high[-1]-low[-1])>=0.75)and((open[-1]-low[-1])/(0.001+high[-1]-low[-1])>=0.75)) and high[-2] < open[-1] and high[-3] < open[-1])
+
+                           DarkCloudCover = ((close[-2]>open[-2])and(((close[-2]+open[-2])/2)>close[-1])and(open[-1]>close[-1])and(open[-1]>close[-2])and(close[-1]>open[-2])and((open[-1]-close[-1])/(.001+(high[-1]-low[-1]))>0.6))
+
+                           candle=""
+                           if doji:
+                            candle = "DOJI - Belirsiz durum, bekle!"
+                           elif BullishHarami:
+                            candle = '\U0001F42E'+"BULLISH HARAMI-Kararsız yükseliş!"+'\U0001F42E'
+                           elif BullishEngulfing:
+                            candle = '\U0001F42E'*3+"BULLISH ENGULFING - Kararlı yükseliş!"+'\U0001F42E'*3
+                           elif BearishHarami:
+                            candle = '\U0001F43C'+"BEARISH HARAMI - Kararsız düşüş!"+'\U0001F43C'
+                           elif BearishEngulfing:
+                            candle = '\U0001F43C'*3+"BEARISH ENGULFING - Kararlı düşüş!"+'\U0001F43C'*3
+                           elif EveningStar:
+                            candle = '\U0001F43C'+"EVENING STAR - Yükseliş sonlanıyor olabilir, bir sonraki hareketi bekle!"+'\U0001F43C'
+                           elif MorningStar:
+                            candle = '\U0001F42E'+"MORNING STAR - Düşüş sonlanıyor olabilir, bir sonraki hareketi bekle!"+'\U0001F42E'
+                           elif PiercingLine:
+                            candle = '\U0001F42E'+"PIERCING LINE - Düşüş sonlanıyor olabilir Dark Cloud Cover tersi!"+'\U0001F42E'
+                           elif Hammer:
+                            candle = '\U0001F42E'+'HAMMER - Düşüş trendi sonlanıyor ,BULL başlangıcı olabilir'+'\U0001F42E'
+                           elif InvertedHammer:
+                            candle = '\U0001F42E'+'INVERTED HAMMER - Düşüş trendi sonlanıyor ,BULL başlangıcı olabilir'+'\U0001F42E'
+                           elif BullishKicker:
+                            candle = '\U0001F42E'*2+'BULLISH KICKER - Güçlü boğa dönüş'+'\U0001F42E'*2
+                           elif BearishKicker:
+                            candle = '\U0001F43C'*2+'BEARISH KICKER - Güçlü ayı dönüş!'+'\U0001F43C'*2
+                           elif HangingMan:
+                            candle = '\U0001F43C'+'HANGING MAN - Yükseliş trendi sonlanıyor, BEAR başlangıcı'+'\U0001F43C'*2
+                           elif DarkCloudCover:
+                            candle = '\U0001F43C'+'DARK CLOUD COVER - Yükseliş sonlanıyor olabilir Piercing Line tersi!'+'\U0001F43C'
+                           print(symbol)
+
+                           intervalfibo = '4h'
+                           klinesfibo = connection.client.get_klines(symbol=symbol, interval=intervalfibo, limit=limit)
+                           closefibo = [float(entry[4]) for entry in klinesfibo]
+                           fibo_array = np.asarray(closefibo)
+                           df = fibo_array[-126:]
+                           maxr = df.max()
+                           minr = df.min()
+                           diff = maxr - minr
+                           level0 = maxr - (0*diff)     #level 0 tepe noktası
+                           level1 = maxr - (0.236*diff) #%236short
+                           level2 = maxr - (0.382*diff) #%382 önemli direnç/destek (SHORT)
+                           level3 = maxr - (0.5*diff)   #%50
+                           level4 = maxr - (0.618*diff) #%618 önemli direnç destek (LONG)
+                           level5 = maxr - (0.786*diff) #%786 alt destek
+                           level6 = maxr - (1*diff)     #%1 dip destek
+                           levela = maxr + (0.382*diff) #tepe
+                           levelb = maxr + (0.618*diff) #tepe2
+
+                           level = 0
+                           seviye = ""
+                           dip = ""
+                           x = close[-1]
+                           if x < level0 and x > level1:
+                            level = 1
+                            candlel = "\U0001F531"
+                            seviye = "\nTargets: " + str("{:.8f}".format(level0))+", "+str("{:.8f}".format(levela))+", "+ str("{:.8f}".format(levelb))+"+"
+                            dip = level1
+                           elif x < level1 and x > level2:
+                            level = 2
+                            candlel = "\U0001F531"*2
+                            seviye = "\nTargets: " + str("{:.8f}".format(level1))+", "+str("{:.8f}".format(level0))+", "+ str("{:.8f}".format(levela))+"+"
+                            dip = level2
+                           elif x < level2 and x > level3:
+                            level = 3
+                            candlel = "\U0001F531"*3
+                            seviye = "\nTargets: " + str("{:.8f}".format(level2))+", "+str("{:.8f}".format(level1))+", "+ str("{:.8f}".format(level0))+"+"
+                            dip = level3
+                           elif x < level3 and x > level4:
+                            level = 4
+                            candlel = "\U0001F531"*4
+                            seviye = "\nTargets: " + str("{:.8f}".format(level3))+", "+str("{:.8f}".format(level2))+", "+ str("{:.8f}".format(level1))+", "+str("{:.8f}".format(level0))+"+"
+                            dip = level4
+                           elif x < level4 and x > level5:
+                            level = 5
+                            candlel = "\U0001F531"*5
+                            seviye = "\nTargets: " + str("{:.8f}".format(level4))+", "+str("{:.8f}".format(level3))+", "+ str("{:.8f}".format(level2))+", "+str("{:.8f}".format(level1))+"+"
+                            dip = level5
+                           elif x < level5 and x > level6:
+                            level = 6
+                            candlel = "\U0001F531"*6
+                            seviye = "\nTargets: " + str("{:.8f}".format(level5))+", "+str("{:.8f}".format(level4))+", "+ str("{:.8f}".format(level3))+", "+str("{:.8f}".format(level2))+"+"
+                            dip = level6
+                           elif x < level6:
+                            level = 7
+                            candlel = "\U0001F531"*7
+                            seviye = "\nTargets: " + str("{:.8f}".format(level6))+", "+str("{:.8f}".format(level5))+", "+ str("{:.8f}".format(level4))+", "+str("{:.8f}".format(level3))+"+"
+                            dip = level7
+                           fibolevel = "\n\n \U0001F4CA FİBONACCI Level (21 day) -Şu anki seviyesi: "+str(level)+" "+candlel+"\nTepe-2: "+str("{:.8f}".format(levelb)) +"\nTepe-1: "+str("{:.8f}".format(levela))+ "\nSeviye 0: "+str("{:.8f}".format(level0))+": Tepe noktası %0 \U0001F4B2 \n"+"Seviye 1: "+str("{:.8f}".format(level1))+": Direnç/Destek noktası\n"+"Seviye 2: "+str("{:.8f}".format(level2))+": Önemli Direnç/Destek noktası(SHORT) \U0001F4AA \n"+"Seviye 3: "+str("{:.8f}".format(level3))+": Ara nokta \n"+"Seviye 4: "+str("{:.8f}".format(level4))+": Önemli Direnç/Destek noktası(LONG) \U0001F4AA \n"+"Seviye 5: "+str("{:.8f}".format(level5))+": Alt Destek noktası \n"+"Seviye 6: "+str("{:.8f}".format(level6))+": Dip Destek noktası \n"
+                           print(fibolevel,seviye)
+                           def telegramsat(id):
+                            bot.sendMessage(chat_id=id, text=(shitemoji*5) + "Strong Sell Signal\n" + symbol + "\n\nCurrent Value: "+ str("{:.8f}".format(close[-1])) + "\nSell Value: "+str("{:.8f}".format(sellavg)))
+                           def telegramal(id):
+                            bot.sendMessage(chat_id=id, text=(fireemoji*5)+ "Strong Buy Signal\n" + symbol + "\n\nCurrent Value: "+ str("{:.8f}".format(close[-1]))+ "\n" + "Buy Value: "+str("{:.8f}".format(buyavg))+"\nBuy Dip: "+str("{:.8f}".format(dip)) +"\n"+seviye+"\n\nStop Loss:"+str("{:.8f}".format(buyavg*0.93)))
+                           if last_ema2 > last_ema1 and previous_ema1 > previous_ema2:
+                            ratiodown=(close[-2] - close[-1])/close[-2]
+                            ratioEMAdown=(last_ema2-close[-1])/close[-1]
+                            if ratioEMAdown >0 and ratioEMAdown<0.01: emojiema='\U0001F6A9'
+                            elif ratioEMAdown>=0.01 and ratioEMAdown<0.03: emojiema=('\U0001F6A9')*2
+                            elif ratioEMAdown>=0.03 and ratioEMAdown<0.05: emojiema=('\U0001F6A9')*3
+                            elif ratioEMAdown>=0.05 and ratioEMAdown<0.07: emojiema=('\U0001F6A9')*4
+                            elif ratioEMAdown>=0.07: emojiema=('\U0001F6A9')*5
+                            telegramsat(chatid)
+                           elif last_ema2 < last_ema1 and previous_ema1 < previous_ema2:
+                            ratioEMAup=(close[-1]-last_ema2)/last_ema2
+                            ratioup=(close[-1]-close[-2])/close[-2]
+                            if ratioEMAup >0 and ratioEMAup<0.01: emojiema='\U0001F4B0'
+                            elif ratioEMAup>=0.01 and ratioEMAup<0.03: emojiema=('\U0001F4B0')*2
+                            elif ratioEMAup>=0.03 and ratioEMAup<0.05: emojiema=('\U0001F4B0')*3
+                            elif ratioEMAup>=0.05 and ratioEMAup<0.07: emojiema=('\U0001F4B0')*4
+                            elif ratioEMAup>=0.07:
+                             emojiema=('\U0001F4B0')*5
+                            telegramal(chatid)
+                           count += 1
+                        except: count+=1
+                except Exception as exp:
+                    print(exp.status_code, flush=True)
+                    print(exp.message, flush=True)
+            break
+        except Exception as exp:
+            print(exp.status_code, flush=True)
+            print(exp.message, flush=True)
