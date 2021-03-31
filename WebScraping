@@ -1,0 +1,56 @@
+#!/usr/bin/env python
+import requests
+import telegram
+import emoji
+from bs4 import BeautifulSoup
+
+bot = telegram.Bot(token=<token>)
+chatid1 = <chatid1>
+chatid2 = <chatid2>
+path =  <path>
+key_words = ['word to scraping']
+f = open(path, 'r')
+urls = f.readlines()
+urls = [url.rstrip() for url in urls] # remove the '\n' char
+f.close()
+# Make a request
+page = requests.get("WEBSITE ADDRESS")
+soup = BeautifulSoup(page.content, 'html.parser')
+# Extract title of page
+page_title = soup.title
+
+# Extract body of page
+page_body = soup.body
+
+# Extract head of page
+page_head = soup.head
+def contains_wanted(in_str):
+     # returns true if the in_str contains a keyword
+     # we are interested in. Case-insensitive
+     for wrd in key_words:
+      if wrd.lower() in in_str:
+         return True
+     return False
+
+def url_is_new(urlstr):
+  # returns true if the url string does not exist
+  # in the list of strings extracted from the text file
+     if urlstr in urls:
+      return False
+     else:
+      return True
+# print the result
+prices=[]
+cleaned_lines=[]
+for element in soup.body('a'):
+ text = element.text
+ prices.append(element.text)
+ if key_words in element:
+  continue
+ cleaned_lines.append(text.rstrip())
+ if contains_wanted(text.lower()) and url_is_new(text):
+  bot.sendMessage(chat_id=chatid1, text=text,parse_mode= 'Markdown')
+  time.sleep(30) #wait 30 sec
+  bot.sendMessage(chat_id=chatid2, text=text,parse_mode= 'Markdown')
+  with open(path, 'a') as f:
+   f.write('{}\n'.format(text))
