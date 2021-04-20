@@ -1,0 +1,23 @@
+#!/usr/bin/env python
+from requests import Request, Session
+from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
+import json
+
+path = 'PATH/HashRate'
+pathratio = 'PATH/HashRatio'
+f = open(path, "r")
+url = 'https://blockchain.info/q/hashrate'
+session = Session()
+session.headers.update(headers)
+try:
+  response = session.get(url, params=parameters)
+  datajson = json.loads(response.text)
+  hashrate = response.json()
+  oldvalue = f.read().splitlines()
+  change = (int(hashrate) - int(oldvalue[0]))/ int(oldvalue[0])*100
+  with open(path, 'w') as f:
+   f.write(str(hashrate))
+   r = open(pathratio, "w")
+   r.write(str(change))
+except (ConnectionError, Timeout, TooManyRedirects) as e:
+  print(e)
