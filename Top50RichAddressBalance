@@ -16,7 +16,6 @@ with open(path) as fp:
    session = Session()
    response = session.get(url)
    datajson = json.loads(response.text)
-   wbalance = response.json()
    finalbalance = datajson[wallet]['final_balance']/100000000000
    print(wallet, finalbalance)
    ff.write(str(datajson[wallet]['final_balance'])+ '\n')
