@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+from requests import Request, Session
+from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
+import json
+import telegram
+
+path = '/READ/Puell'
+f = open(path, "r")
+url = 'https://www.lookintobitcoin.com/django_plotly_dash/app/puell_multiple/_dash-layout'
+parameters = {
+}
+headers = {
+}
+session = Session()
+session.headers.update(headers)
+try:
+  response = session.get(url, params=parameters)
+  datajson = json.loads(response.text)
+  length = len(datajson['props']['children'][0]['props']['figure']['data'][1]['y'])
+  puell = datajson['props']['children'][0]['props']['figure']['data'][1]['y'][length-1]
+  with open(path, 'w') as f:
+   f.write(str(puell))
+except (ConnectionError, Timeout, TooManyRedirects) as e:
+  print(e)
