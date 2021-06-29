@@ -3,22 +3,48 @@ from requests import Request, Session
 from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
 import json
 import telegram
+import requests
 
-path = '/READ/Puell'
+bot = telegram.Bot(token=TOKEN)
+chatid = CHATID
+path = '/home/Python/TradingBot/READ/Puell'
+pathrat = '/home/Python/TradingBot/READ/RATIO/Puell'
 f = open(path, "r")
-url = 'https://www.lookintobitcoin.com/django_plotly_dash/app/puell_multiple/_dash-layout'
+x = open(pathrat, "w")
+url = 'https://www.lookintobitcoin.com/django_plotly_dash/app/puell_multiple/_dash-update-component'
 parameters = {
+
 }
 headers = {
+  'Accepts': 'application/json'
 }
+request_data = {
+ 'output': 'chart.figure',
+ 'changedPropIds': [
+   'url.pathname'
+ ],
+ 'inputs': [
+     {
+        'id': 'url',
+        'property': 'pathname',
+        'value': '/charts/puell_multiple/'
+     }
+   ]
+}
+
 session = Session()
 session.headers.update(headers)
 try:
-  response = session.get(url, params=parameters)
-  datajson = json.loads(response.text)
-  length = len(datajson['props']['children'][0]['props']['figure']['data'][1]['y'])
-  puell = datajson['props']['children'][0]['props']['figure']['data'][1]['y'][length-1]
+  response = requests.post(url, json=request_data)
+  response_json = response.json()
+  length = len(response_json['response']['props']['figure']['data'][1]['y'])
+  puell = response_json['response']['props']['figure']['data'][1]['y'][length-1]
+  puell2 = response_json['response']['props']['figure']['data'][1]['y'][length-2]
+  puellrat = float(puell)/float(puell2)
+  print(str(puell))
   with open(path, 'w') as f:
    f.write(str(puell))
+   x.write(str(puellrat))
+
 except (ConnectionError, Timeout, TooManyRedirects) as e:
   print(e)
