@@ -1,0 +1,49 @@
+#!/usr/bin/env python
+from requests import Request, Session
+from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
+import json
+import requests
+
+
+path = '/home/Python/TradingBot/READ/RHODL'
+pathrat = '/home/Python/TradingBot/READ/RATIO/RHODL'
+f = open(path, "r")
+x = open(pathrat, "w")
+url = 'https://www.lookintobitcoin.com/django_plotly_dash/app/rhodl_ratio/_dash-update-component'
+parameters = {
+
+}
+headers = {
+  'Accepts': 'application/json',
+        'User-Agent':   'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0'
+
+}
+request_data = {
+ 'output': 'chart.figure',
+ 'changedPropIds': [
+   'url.pathname'
+ ],
+ 'inputs': [
+     {
+        'id': 'url',
+        'property': 'pathname',
+        'value': '/charts/rhodl-ratio/'
+     }
+   ]
+}
+
+session = Session()
+try:
+  response = requests.post(url, json=request_data)
+  response_json = response.json()
+
+  length = len(response_json['response']['props']['figure']['data'][1]['y'])
+  rhodl = response_json['response']['props']['figure']['data'][1]['y'][length-1]
+  rhodl2 = response_json['response']['props']['figure']['data'][1]['y'][length-2]
+  rhodlrat = float(rhodl)/float(rhodl2)
+  print(str(rhodl))
+  with open(path, 'w') as f:
+   f.write(str(rhodl))
+   x.write(str(rhodlrat))
+except (ConnectionError, Timeout, TooManyRedirects) as e:
+  print(e)
