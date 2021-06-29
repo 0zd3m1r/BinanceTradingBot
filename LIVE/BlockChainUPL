@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+from requests import Request, Session
+from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
+import json
+import requests
+
+path = '/home/Python/TradingBot/READ/UPL'
+pathrat = '/home/Python/TradingBot/READ/RATIO/UPL'
+f = open(path, "r")
+x = open(pathrat, "w")
+
+url = 'https://www.lookintobitcoin.com/django_plotly_dash/app/unrealised_profit_loss/_dash-update-component'
+parameters = {
+
+}
+headers = {
+  'Accepts': 'application/json',
+        'User-Agent':   'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0'
+
+}
+request_data = {
+ 'output': 'chart.figure',
+ 'changedPropIds': [
+   'url.pathname'
+ ],
+ 'inputs': [
+     {
+        'id': 'url',
+        'property': 'pathname',
+        'value': '/charts/unrealised_profit_loss/'
+     }
+   ]
+}
+
+session = Session()
+try:
+  response = requests.post(url, json=request_data)
+  response_json = response.json()
+  length = len(response_json['response']['props']['figure']['data'][0]['y'])
+  upl = response_json['response']['props']['figure']['data'][0]['y'][length-1]
+  upl2 = response_json['response']['props']['figure']['data'][0]['y'][length-2]
+  uplrat = float(upl)/float(upl2)
+  print(str(upl))#,str(hashrate))#,str(oldvalue[0]),str(change))
+  with open(path, 'w') as f:
+   f.write(str(upl))
+   x.write(str(uplrat))
+except (ConnectionError, Timeout, TooManyRedirects) as e:
+  print(e)
