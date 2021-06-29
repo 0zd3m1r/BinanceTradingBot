@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+from requests import Request, Session
+from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
+import json
+
+path = '/home/Python/TradingBot/READ/HashRate'
+pathratio = '/home/Python/TradingBot/READ/HashRatio'
+f = open(path, "r")
+url = 'https://blockchain.info/q/hashrate'
+parameters = {
+
+}
+headers = {
+  'Accepts': 'application/json',
+
+}
+
+session = Session()
+session.headers.update(headers)
+
+try:
+  response = session.get(url, params=parameters)
+  datajson = json.loads(response.text)
+  hashrate = response.json()
+  print(hashrate/1000000000)
+  hashfloat = hashrate/1000000000
+  oldvalue = f.read().splitlines()
+  icon = ''
+  oldval = float(oldvalue[0])
+  change = ((float(hashfloat) - float(oldval))/ float(oldval))*100
+  print(str(hashrate),str(oldvalue[0]),str(change))
+
+
+  with open(path, 'w') as f:
+   f.write(str(hashrate/1000000000))
+   r = open(pathratio, "w")
+   r.write(str(change))
+
+except (ConnectionError, Timeout, TooManyRedirects) as e:
+  print(e)
