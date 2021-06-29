@@ -22,25 +22,36 @@ class BinanceConnection:
         self.client = Client(key, secret)
 
 if __name__ == '__main__':
-    credentials = 'PATH/READ/Credentials'
-    dompath = 'PATH/READ/BTCDOM'
-    hashratpath = 'PATH/READ/HashRatio'
-    hashpath = 'PATH/READ/HashRate'
-    markets = 'PATH/READ/Markets'
-    rsipath = 'PATH/RAPOR/RSIrapor'
-    buyvalue4h = 'PATH/READ/BuyValue4h'
-    report ='PATH/READ/Rapor4h'
-    puellpath = 'PATH/PuellValue'
-    mvrvpath = 'PATH/READ/MVRV'
-    nvtspath = 'PATH/READ/NVTS'
-    lowvalue = 'PATH/READ/LowValue'
-    note= "\n\U00002757It's a watchlist for undervalued.\n\U00002757Düşük fiyatlananlar takip listesidir."
+    credentials = '/home/Python/TradingBot/READ/Credentials'
+    dompath = '/home/Python/TradingBot/READ/BTCDOM'
+    hashratpath = '/home/Python/TradingBot/READ/HashRatio'
+    hashpath = '/home/Python/TradingBot/READ/HashRate'
+    markets = '/home/Python/TradingBot/READ/Markets'
+    rsipath = '/home/Python/TradingBot/READ/RAPOR/RSIrapor'
+    buyvalue4h = '/home/Python/TradingBot/READ/BuyValue4h'
+    report ='/home/Python/TradingBot/READ/Rapor4h'
+    puellpath = '/home/Python/TradingBot/READ/PuellValue'
+    mvrvpath = '/home/Python/TradingBot/READ/MVRV'
+    nvtspath = '/home/Python/TradingBot/READ/NVTS'
+    lowvalue = '/home/Python/TradingBot/READ/LowValue'
+    minerspath = '/home/Python/TradingBot/READ/MinersRevenue'
+    puellpath = '/home/Python/TradingBot/READ/Puell'
+    uplpath = '/home/Python/TradingBot/READ/UPL'
+    rhodlpath = '/home/Python/TradingBot/READ/RHODL'
+
+    MinersRevenueratpath = '/home/Python/TradingBot/READ/RATIO/MinersRevenue'
+    MVRVratpath = '/home/Python/TradingBot/READ/RATIO/MVRV'
+    NVTSratpath = '/home/Python/TradingBot/READ/RATIO/NVTS'
+    Puellratpath = '/home/Python/TradingBot/READ/RATIO/Puell'
+    RHODLratpath = '/home/Python/TradingBot/READ/RATIO/RHODL'
+    UPLratpath = '/home/Python/TradingBot/READ/RATIO/UPL'
+
+    note= ""#\n\U00002757It's a watchlist for undervalued.\n\U00002757Düşük fiyatlananlar takip listesidir."
     connection = BinanceConnection(credentials)
     interval = '4h'
     limit = 750
-    bot = telegram.Bot(token="TOKEN") #Telegram Bot Token
-#    chatid = "CHATID" #Telegram Chatid
-    chatid = "CHATID"
+    bot = telegram.Bot(token=TOKEN) #Telegram Bot Token
+    chatid = CHATID #Telegram Chatid
     fireemoji = emoji.emojize(':fire:')
     shitemoji = '\U0001F4A7'
     thumbsup = '\U0001F44D'
@@ -59,9 +70,24 @@ if __name__ == '__main__':
                 mvrv = open(mvrvpath, "r")
                 rsp = open(rsipath, "w")
                 lvalue = open(lowvalue, "r")
-                try:
-                 bot.sendMessage(chat_id=chatid, text="\U0001F4CC *Under-Valued List & Dip Zone !* \U0001F4CC \n"+lvalue.read()+note, parse_mode= 'Markdown')
-                except: print("Mesaj uzun!")
+                miners = open(minerspath, "r")
+                puell = open(puellpath, "r")
+                upl = open(uplpath, "r")
+                rhodl = open(rhodlpath, "r")
+
+                minersrat = open(MinersRevenueratpath, "r")
+                mvrvrat = open(MVRVratpath, "r")
+                nvtsrat = open(NVTSratpath, "r")
+                puellrat = open(Puellratpath, "r")
+                rhodlrat = open(RHODLratpath, "r")
+                uplrat = open(UPLratpath, "r")
+  #              try:
+#                 lowval = lvalue.read()
+#                 if lowval != "":
+   #              bot.sendMessage(chat_id=chatid, text="\U0001F4CC *Under-Valued List & Dip Zone !* \U0001F4CC \n"+lvalue.read()+note, parse_mode= 'Markdown')
+#                 bot.sendMessage(chat_id=chatid2, text="\U0001F4CC *Under-Valued List & Dip Zone !* \U0001F4CC \n"+lvalue.read()+note, parse_mode= 'Markdown')
+  #              except:  #bot.sendMessage(chat_id=chatid, text="The length of the message exceeds the Telegram limit. / Mesajın uzunluğu Telegram sınırını aşıyor.", parse_mode= 'Markdown')
+ #                print("Mesaj uzun!")
                 count = 0
                 try:
                    for line in lines:
@@ -201,6 +227,7 @@ if __name__ == '__main__':
                            def telegramal(id):
                             bot.sendMessage(chat_id=id, text=(fireemoji*1)+"#" +symbol +"\nYou can buy some here!\n"+ "\nCurrent Price: "+ str("{:.8f}".format(close[-1]))+ "\n" + "Entry Price: "+str("{:.8f}".format(buyavg))+seviye+"\n\U000026D4Stop Loss: "+str("{:.8f}".format(sloss)))
                             bvalue4h.write(symbol+"\n"+str("{:.8f}".format(buyavg))+"\n")
+#                            bot.sendMessage(chat_id=chatid2, text=(fireemoji*1)+"#" +symbol +"\nYou can buy some here!\n"+ "\nCurrent Price: "+ str("{:.8f}".format(close[-1]))+ "\n" + "Entry Price: "+str("{:.8f}".format(buyavg))+seviye+"\n\U000026D4Stop Loss: "+str("{:.8f}".format(sloss)))
                            print(symbol,"{:.8f}".format(close[-1]), "{:.8f}".format(last_ema1),"{:.8f}".format(last_ema2),"{:.0f}".format(rsivalue[-1]),"{:.0f}".format(last_rsima))
                            if last_ema2 > last_ema1 and previous_ema1 > previous_ema2 and symbol=='BTCUSDT':
 
@@ -227,16 +254,92 @@ if __name__ == '__main__':
                              telegramal(chatid)
                            def telegramalert(id,rat,icon,fng,fngval,iconfng,last_emalong,last_emashort,last_InvestorTool):
                             hratioval = hr.read()
-                            if float(hratioval)<0:iconhash='% \U0001F7E5'
-                            elif float(hratioval)>0:iconhash='% \U0001F7E9'
+                            if float(hratioval)<0 and float(hratioval)>-10:iconhash=' \U0001F7E5'
+                            elif float(hratioval)<=-10:iconhash=' \U0001F7E5'*3
+                            elif float(hratioval)>=0 and float(hratioval)<10:iconhash=' \U0001F7E9'
+                            elif float(hratioval)>=10:iconhash=' \U0001F7E9'*3
                             nvtsval = nvts.read()
                             iconmvrv=''
+                            iconminers=''
+                            iconpuell=''
+                            iconupl = ''
+                            iconrhodl = ''
+                            iconminersrat = ''
+                            iconmvrvrat = ''
+                            iconnvtsrat = ''
+                            iconpuellrat = ''
+                            iconrhodlrat = ''
+                            iconuplrat = ''
                             mvrvval = mvrv.read()
-                            if float(mvrvval)<1.501:iconmvrv=' BUY ZONE!!!'
-                            elif float(mvrvval)>1.501 and  float(mvrvval)<3.991:iconmvrv=' Neutral'
-                            elif float(mvrvval) >3.99:iconmvrv=' SELL ZONE!!!'
+                            minersval = miners.read()
+                            puellval = puell.read()
+                            uplval = upl.read()
+                            rhodlval = rhodl.read()
+                            minersratval = minersrat.read()
+                            mvrvratval = mvrvrat.read()
+                            nvtsratval = nvtsrat.read()
+                            puellratval = puellrat.read()
+                            rhodlratval = rhodlrat.read()
+                            uplratval = uplrat.read()
+                            upicon = '\U00002B06'
+                            downicon = '\U00002B07'
+                            stableicon = '\U00002194'
+
+                            if float(minersval)<=8: iconminers=' BUY ZONE! \U0001F680'
+                            elif float(minersval)>60:iconminers=' SELL ZONE! \U0001F480'
+                            elif float(minersval)<=60 and float(minersval)>8: iconminers=' \U0001F9D0'
+
+                            if float(mvrvval)<=0:iconmvrv=' BUY ZONE! \U0001F680'
+                            elif float(mvrvval)>0 and  float(mvrvval)<7.5:iconmvrv=' Neutral \U0001F9D0'
+                            elif float(mvrvval) >=7.5:iconmvrv=' SELL ZONE! \U0001F480'
+
+                            if float(puellval)<=0.5: iconpuell=' BUY ZONE! \U0001F680'
+                            elif float(puellval)>4: iconpuell=' SELL ZONE! \U0001F480'
+                            elif float(puellval)>0.5 and float(puellval)<=4: iconpuell=' \U0001F9D0'
+
+                            if float(uplval) <=0: iconupl=' Capitulation \U0001F680'
+                            elif float(uplval) >0 and float(uplval) <=0.3: iconupl=' Hope/Fear (0-0.30) \U0001F633'# \U0001F914 vs \U0001F628'
+                            elif float(uplval) >0.3 and float(uplval) <=0.55: iconupl=' Optimism/Denial (0.30-0.55) \U0001F9D0'# \U0001F60B vs \U0001F97A'
+                            elif float(uplval) >0.55 and float(uplval) <=0.77: iconupl=' Greed/Açgözlülük (0.55-0.77) \U0001F922'# \U0001F922'
+                            elif float(uplval) >0.7: iconupl=' Euphoria/Sarhoşluk \U0001F480'
+
+                            if float(rhodlval) > 50000: iconrhodl=' SELL ZONE! \U0001F480'
+                            elif float(rhodlval) < 350: iconrhodl=' BUY ZONE! \U0001F680'
+                            elif float(rhodlval) >=350 and float(rhodlval) <=50000: iconrhodl = ' \U0001F9D0'
+
+                            if float(minersratval) > 1: iconminersrat  = upicon
+                            elif float(minersratval) < 1: iconminersrat = downicon
+                            else: iconminersrat = stableicon
+
+                            if float(mvrvratval) > 1: iconmvrvrat  = upicon
+                            elif float(mvrvratval) < 1: iconmvrvrat = downicon
+                            else: iconmvrvrat = stableicon
+
+                            if float(nvtsratval) > 1: iconnvtsrat  = upicon
+                            elif float(nvtsratval) < 1: iconnvtsrat = downicon
+                            else: iconnvtsrat = stableicon
+
+                            if float(puellratval) > 1: iconpuellrat  = upicon
+                            elif float(puellratval) < 1: iconpuellrat = downicon
+                            else: iconpuellrat = stableicon
+
+                            if float(rhodlratval) > 1: iconrhodlrat  = upicon
+                            elif float(rhodlratval) < 1: iconrhodlrat = downicon
+                            else: iconrhodlrat = stableicon
+
+                            if float(uplratval) > 1: iconuplrat  = upicon
+                            elif float(uplratval) < 1: iconuplrat = downicon
+                            else: iconuplrat = stableicon
+
+                            try:
+                             print("BTC info sending...")
 #                            elif float(mvrvval)>1.5 and float(mvrvval)<4:iconmvrv=' NEUTRAL'
-                            bot.sendMessage(chat_id=id, text=icon+"#"+symbol + " has changed " + str("{0:.1%}".format(rat))+ " in 4 hours!"+icon+"\nLast Price: $"+str("{:.0f}".format(close[-2]))+"\nCurrent Price: $"+ str("{:.0f}".format(close[-1]))+"\nRSI: "+str("{:.2f}".format(rsivalue[-1]))+rsiicon+"\nBTC Dominance: "+str("{:.5}".format(dom.read()))+"\nHash Rate: "+str("{:.6}".format(hs.read()))+"B\nHash Rate Change: "+str("{:.5}".format(hratioval))+iconhash+"\nFear&Greed Index: "+str(fngval)+"-"+fng+" "+iconfng+"\nMVRV Z-Score: "+str("{:.5}".format(mvrvval))+iconmvrv+"(1.5-4)\nNVTS: "+str("{:.5}".format(nvtsval))+"(10-18)\n111DMA: $"+str("{:.0f}".format(last_emalong*2))+"\n350DMA: $"+str("{:.0f}".format(last_emashort)) +"\nBIT High: $"+str("{:.0f}".format(last_InvestorTool*5))+"\U0001F4C8"+"\nBIT Low: $"+str("{:.0f}".format(last_InvestorTool))+"\U0001F4C9"+"\n\U0001F530Resistance/Direnç: $"+str("{:.0f}".format(resistance))+"\n\U0001F4DBSupport/Destek: $"+str("{:.0f}".format(support)) +"\n\U000026D4Trailing StopLoss: $"+str("{:.0f}".format(sloss))+"\n\n"+candle)
+                             bot.sendMessage(chat_id=id, text=icon+"#"+symbol + " has changed " + str("{0:.1%}".format(rat))+ " in 4 hours!"+icon+"\nLast Price: $"+str("{:.0f}".format(close[-2]))+"\nCurrent Price: $"+ str("{:.0f}".format(close[-1]))+"\nRSI: "+str("{:.2f}".format(rsivalue[-1]))+rsiicon+"\nBTC Dominance: "+str("{:.5}".format(dom.read()))+"\nHash Rate: "+str("{:.6}".format(hs.read()))+"B\nHash Rate Change: "+str("{:.5}".format(hratioval))+"%"+iconhash+"\nFear&Greed Index: "+str(fngval)+"-"+fng+" "+iconfng+"\nMVRV Z-Score: "+str("{:.5}".format(mvrvval))+" (0-7.5) "+iconmvrvrat+"\nNVTS: "+str("{:.5}".format(nvtsval))+" (10-18) "+iconnvtsrat+"\nMiners Revenue: "+str("{:.5}".format(minersval)) +"M (8-60)"+iconminersrat+"\nPUELL: "+str("{:.5}".format(puellval))+" (0.5-4) " +iconpuellrat+"\nUPL: "+str("{:.5}".format(uplval))+iconuplrat+"\nRHODL: "+str("{:.0f}".format(float(rhodlval)))+" (350-50000) "+iconrhodlrat+"\n350DMA: $"+str("{:.0f}".format(last_emalong*2))+"\n111DMA: $"+str("{:.0f}".format(last_emashort)) +"\nBIT High: $"+str("{:.0f}".format(last_InvestorTool*5))+"\U0001F4C8"+"\nBIT Low: $"+str("{:.0f}".format(last_InvestorTool))+"\U0001F4C9"+"\n\U0001F530Resistance/Direnç: $"+str("{:.0f}".format(resistance))+"\n\U0001F4DBSupport/Destek: $"+str("{:.0f}".format(support)) +"\n\U000026D4Trailing StopLoss: $"+str("{:.0f}".format(sloss))+"\n\n"+candle)
+#                            bot.sendMessage(chat_id=chatid2, text=icon+"#"+symbol + " has changed " + str("{0:.1%}".format(rat))+ " in 4 hours!"+icon+"\nLast Price: $"+str("{:.0f}".format(close[-2]))+"\nCurrent Price: $"+ str("{:.0f}".format(close[-1]))+"\nRSI: "+str("{:.2f}".format(rsivalue[-1]))+rsiicon+"\nBTC Dominance: only VIP"+"\nHash Rate: only VIP"+"\nHash Rate Change: "+str("{:.5}".format(hratioval))+"%"+iconhash+"\nFear&Greed Index: "+str(fngval)+"-"+fng+" "+iconfng+"\nMVRV Z-Score: only VIP\nNVTS: only VIP\n350DMA: $"+str("{:.0f}".format(last_emalong*2))+"\n111DMA: $"+str("{:.0f}".format(last_emashort)) +"\nBIT High: $"+str("{:.0f}".format(last_InvestorTool*5))+"\U0001F4C8"+"\nBIT Low: $"+str("{:.0f}".format(last_InvestorTool))+"\U0001F4C9"+"\n\U0001F530Resistance/Direnç: $"+str("{:.0f}".format(resistance))+"\n\U0001F4DBSupport/Destek: $"+str("{:.0f}".format(support)) +"\n\U000026D4Trailing StopLoss: $"+str("{:.0f}".format(sloss))+"\n\n"+candle)
+                            except  Exception as exp:
+                             print(exp.status_code, flush=True)
+                             print(exp.message, flush=True)
+                            print("BTC info has sent!")
                            if symbol == 'BTCUSDT':
                             ratio= (close[-1]-close[-2])/close[-2]
                             if rsivalue[-1] < 30:
@@ -262,6 +365,7 @@ if __name__ == '__main__':
                             BearishKicker = (open[-2]<close[-2] and open[-1]<=open[-2] and close[-1]<=open[-1])
                             HangingMan = (((high[-1]-low[-1]>(4*(open[-1]-close[-1])))and((close[-1]-low[-1])/(0.001+high[-1]-low[-1])>=0.75)and((open[-1]-low[-1])/(0.001+high[-1]-low[-1])>=0.75)) and high[-2] < open[-1] and high[-3] < open[-1])
                             DarkCloudCover = ((close[-2]>open[-2])and(((close[-2]+open[-2])/2)>close[-1])and(open[-1]>close[-1])and(open[-1]>close[-2])and(close[-1]>open[-2])and((open[-1]-close[-1])/(.001+(high[-1]-low[-1]))>0.6))
+                            ShootingStar = (open[-2] < close[-2] and open[-1] > close[-2] and high[-1] - max(open[-1], close[-1]) >= abs(open[-1] - close[-1]) * 3 and min(close[-1], open[-1]) - low[-1] <= abs(open[-1] - close[-1]))
                             candle=""
                             if doji:
                              candle = "\U0001F440 Formation: DOJI! \U0001F440"
@@ -291,6 +395,8 @@ if __name__ == '__main__':
                              candle = '\U0001F43B'+'Formation: HANGING MAN'+'\U0001F43B'*2
                             elif DarkCloudCover:
                              candle = '\U0001F43B'+'Formation: DARK CLOUD COVER!'+'\U0001F43B'
+                            elif ShootingStar:
+                             candle = '\U0001F43B'+'Formation: SHOOTING STAR!'+'\U0001F43B'
                             icon = ''
                             iconfng =''
                             if close[-1]>close[-2]: icon='\U0001F7E2'
