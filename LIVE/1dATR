@@ -1,0 +1,88 @@
+#!/usr/bin/env python
+import pandas
+from binance.client import Client
+import numpy as np
+import time
+import telegram
+import emoji
+from pyti.average_true_range import average_true_range as atr
+
+
+class BinanceConnection:
+    def __init__(self, file):
+        self.connect(file)
+
+    """ Creates Binance client """
+    def connect(self, file):
+        lines = [line.rstrip('\n') for line in open(file)]
+        key = lines[0]
+        secret = lines[1]
+        self.client = Client(key, secret)
+
+if __name__ == '__main__':
+    credentials = 'PATH' #give a path
+    markets = 'PATH' #give a path
+    atrpathnew = 'PATH' #give a path
+    connection = BinanceConnection(credentials)
+    interval = '1d'
+    limit = 500
+    bot = telegram.Bot(token="TOKEN") #TOKEN
+    chatid = "CHATID" #CHATID
+    fireemoji = emoji.emojize(':fire:')
+    shitemoji = '\U0001F608'
+    thumbsup = '\U0001F44D'
+    thumbsdown = '\U0001F44E'
+    while True:
+        #time.sleep(20)
+        try:
+            with open(markets) as fp:
+                lines = fp.read().splitlines()
+                fatr = open(atrpathnew,"w")
+                count = 0
+                try:
+                   for line in lines:
+                        symbol = lines[count]
+                        try:
+                           atrvalue = lines[count+1]
+                           klines = connection.client.get_klines(symbol=symbol, interval=interval, limit=limit)
+                           close = [float(entry[4]) for entry in klines]
+                           ATR_Period = 14
+                           multATR = atr(close,14)
+# LONG STOPLOSS
+                           if float(atrvalue) <= close[-2] and float(atrvalue) <= close[-3]:
+                            if close[-2]-multATR[-2]> float(atrvalue):
+                              fatr.write(symbol+"\n"+str("{:.8f}".format(close[-2]-multATR[-2]))+"\n")
+                              print(symbol,"Write: ","Long SL: ",str(close[-2]-multATR[-2]))
+                            else:
+                              fatr.write(symbol+"\n"+str(atrvalue)+"\n")
+                              print(symbol,"LongStopLoss is not changed! Value: ", str(atrvalue))
+# SHORT STOPLOSS
+                           elif float(atrvalue) >= close[-2] and float(atrvalue) >= close[-3]:
+                            if close[-2]+multATR[-2] < close[-3]+multATR[-3]:
+                              fatr.write(symbol+"\n"+str("{:.8f}".format(close[-2]+multATR[-2]))+"\n")
+                              print(symbol,"Write: ","Short SL: ",str(close[-2]+multATR[-2]))
+                            else:
+                              fatr.write(symbol+"\n"+str(atrvalue)+"\n")
+                              print(symbol,"Short StopLoss is not changed!")
+#LONG Cross
+                           elif float(atrvalue) >= close[-3] and float(atrvalue) <= close[-2]:
+                            fatr.write(symbol+"\n"+str("{:.8f}".format(close[-2]-multATR[-2]))+"\n")
+                            print(symbol,"Write: ","Long SL: ",str(close[-2]-multATR[-2]))
+                            print(symbol,"Long Cross")
+#SHORT Cross
+                           elif float(atrvalue) <= close[-3] and float(atrvalue) >= close[-2]:
+                            fatr.write(symbol+"\n"+str("{:.8f}".format(close[-2]+multATR[-2]))+"\n")
+                            print(symbol,"Write: ","Short SL: ",str(close[-2]+multATR[-2]))
+                            print(symbol,"Short Cross")
+                           count += 1
+                        except  Exception as exp:
+                            count+=1
+                            print(exp.status_code, flush=True)
+                            print(exp.message, flush=True)
+                except Exception as exp:
+                    print(exp.status_code, flush=True)
+                    print(exp.message, flush=True)
+            break
+        except Exception as exp:
+            print(exp.status_code, flush=True)
+            print(exp.message, flush=True)
