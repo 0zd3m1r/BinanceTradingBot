@@ -20,14 +20,14 @@ class BinanceConnection:
         self.client = Client(key, secret)
 
 if __name__ == '__main__':
-    credentials = 'PATH' #give a path
-    markets = 'PATH' #give a path
-    atrpathnew = 'PATH' #give a path
+    credentials = 'Credentials' #Credentials PATH
+    markets = '/MarketsATR' #MARKETSATR default price PATH
+    atrpathnew = 'ATRValue' #ATRValue PATH
     connection = BinanceConnection(credentials)
     interval = '1d'
     limit = 500
-    bot = telegram.Bot(token="TOKEN") #TOKEN
-    chatid = "CHATID" #CHATID
+    bot = telegram.Bot(token="<TOKEN PATH>")
+    chatid = "<CHATID PATH>"
     fireemoji = emoji.emojize(':fire:')
     shitemoji = '\U0001F608'
     thumbsup = '\U0001F44D'
@@ -39,15 +39,36 @@ if __name__ == '__main__':
                 lines = fp.read().splitlines()
                 fatr = open(atrpathnew,"w")
                 count = 0
+                rangeindex = int(len(lines)/2)+1
                 try:
-                   for line in lines:
+                   for line in range(1, rangeindex):
                         symbol = lines[count]
                         try:
                            atrvalue = lines[count+1]
                            klines = connection.client.get_klines(symbol=symbol, interval=interval, limit=limit)
+                           open = [float(entry[1]) for entry in klines]
+                           high = [float(entry[2]) for entry in klines]
+                           low = [float(entry[3]) for entry in klines]
                            close = [float(entry[4]) for entry in klines]
                            ATR_Period = 14
-                           multATR = atr(close,14)
+                           ATR_Mult = 4
+                           close_array = np.asarray(close)
+                           open_array = np.asarray(open)
+                           high_array = np.asarray(high)
+                           low_array = np.asarray(low)
+                           emaxclose = pandas.DataFrame(close_array[-5:])
+                           high_low = high_array - low_array
+                           high_close = abs(high_array - close_array)
+                           low_close = abs(low_array-close_array)
+                           dfhl = (pandas.DataFrame(high_low))
+                           dfhc = (pandas.DataFrame(high_close))
+                           dflc = (pandas.DataFrame(low_close))
+                           ranges = pandas.concat([dfhl, dfhc, dflc], axis=1)
+                           true_range = np.max(ranges, axis=1)
+                           atrSMA = true_range.rolling(ATR_Period).mean()
+                           atrRMA = true_range.ewm(alpha=1/ATR_Period).mean()
+                           atrRMA_array = np.asarray(atrRMA)
+                           multATR = atrRMA_array*ATR_Mult
 # LONG STOPLOSS
                            if float(atrvalue) <= close[-2] and float(atrvalue) <= close[-3]:
                             if close[-2]-multATR[-2]> float(atrvalue):
@@ -63,20 +84,28 @@ if __name__ == '__main__':
                               print(symbol,"Write: ","Short SL: ",str(close[-2]+multATR[-2]))
                             else:
                               fatr.write(symbol+"\n"+str(atrvalue)+"\n")
-                              print(symbol,"Short StopLoss is not changed!")
+                              print(symbol,"Short StopLoss is not changed!  Value: ", str(atrvalue))
 #LONG Cross
                            elif float(atrvalue) >= close[-3] and float(atrvalue) <= close[-2]:
                             fatr.write(symbol+"\n"+str("{:.8f}".format(close[-2]-multATR[-2]))+"\n")
                             print(symbol,"Write: ","Long SL: ",str(close[-2]-multATR[-2]))
                             print(symbol,"Long Cross")
+
 #SHORT Cross
                            elif float(atrvalue) <= close[-3] and float(atrvalue) >= close[-2]:
                             fatr.write(symbol+"\n"+str("{:.8f}".format(close[-2]+multATR[-2]))+"\n")
                             print(symbol,"Write: ","Short SL: ",str(close[-2]+multATR[-2]))
                             print(symbol,"Short Cross")
-                           count += 1
+
+# LONG STOPLOSS
+
+#                           buyavg = ((close[-1] + high[-1]) / 2.055 - (high[-1] * (1 - open[-1] / close[-1]) * (1 - ((close[-1] * open[-1]) / (high[-1] * close[-1])))))
+#                           if close[-1] < buyavg:
+#                            buyavg = close[-1]
+#                           sellavg = (low[-1] + close[-1]) / 1.99 + (low[-1] * (1 - low[-1] / open[-1]) * (1 - ((low[-1] * open[-1]) / (close[-1] * high[-1]))) / 1.1)
+                           count += 2
                         except  Exception as exp:
-                            count+=1
+                            count+=2
                             print(exp.status_code, flush=True)
                             print(exp.message, flush=True)
                 except Exception as exp:
